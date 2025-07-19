@@ -1,0 +1,9 @@
+Curto Prazo: Troque onSnapshot por getDocs para um carregamento inicial 
+mais rápido.
+
+Médio Prazo: Implemente um sistema de cache local para tornar as 
+inicializações futuras quase instantâneas.
+
+Longo Prazo (Melhor Solução): Desnormalize seus dados no Firebase 
+para reduzir drasticamente o número de consultas necessárias no 
+carregamento inicial.

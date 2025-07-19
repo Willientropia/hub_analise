@@ -53,7 +53,7 @@ function App() {
     const [activeView, setActiveView] = useState('overview');
     const [clients, setClients] = useState([]);
     const [consumerUnits, setConsumerUnits] = useState([]);
-    const [totalClientsInDB, setTotalClientsInDB] = useState(0); // NOVO: Total no DB
+    const [totalClientsInDB, setTotalClientsInDB] = useState(0);
     const [loading, setLoading] = useState(true);
     const [authReady, setAuthReady] = useState(false);
     const [userId, setUserId] = useState(null);
@@ -74,33 +74,34 @@ function App() {
         });
     }, []);
 
-    // Carregamento de clientes
+    // Carregamento de dados (MODIFICADO)
     useEffect(() => {
         if (!authReady) return;
 
-        setLoading(true);
-        const { getFirestore, collection, query, onSnapshot, getDocs } = window.firebase;
-        const db = getFirestore();
-        
-        // Listener para clientes
-        const clientsQuery = query(collection(db, 'solar-clients'));
-        const unsubscribeClients = onSnapshot(clientsQuery, async (querySnapshot) => {
-            const clientsData = [];
-            const allConsumerUnits = [];
+        // Função assíncrona para buscar os dados uma única vez
+        const fetchData = async () => {
+            setLoading(true);
+            const { getFirestore, collection, query, getDocs } = window.firebase;
+            const db = getFirestore();
             
-            setTotalClientsInDB(querySnapshot.docs.length); // NOVO: Contar total no DB
-            
-            // Processar cada cliente
-            for (const doc of querySnapshot.docs) {
-                const clientData = { id: doc.id, ...doc.data() };
+            try {
+                // 1. Buscar todos os clientes
+                const clientsQuery = query(collection(db, 'solar-clients'));
+                const querySnapshot = await getDocs(clientsQuery);
+
+                const clientsData = [];
+                const allConsumerUnits = [];
                 
-                // Formatar data se necessário
-                if (clientData.installDate && typeof clientData.installDate.toDate === 'function') {
-                    clientData.installDate = clientData.installDate.toDate().toLocaleDateString('pt-BR');
-                }
-                
-                // Buscar UCs do cliente
-                try {
+                setTotalClientsInDB(querySnapshot.docs.length);
+
+                // 2. Processar cada cliente em paralelo para buscar suas UCs
+                const clientProcessingPromises = querySnapshot.docs.map(async (doc) => {
+                    const clientData = { id: doc.id, ...doc.data() };
+                    
+                    if (clientData.installDate && typeof clientData.installDate.toDate === 'function') {
+                        clientData.installDate = clientData.installDate.toDate().toLocaleDateString('pt-BR');
+                    }
+                    
                     const ucsSnapshot = await getDocs(collection(db, `solar-clients/${doc.id}/consumerUnits`));
                     const clientUCs = [];
                     let hasHistoryData = false;
@@ -114,9 +115,7 @@ function App() {
                             ...ucDoc.data() 
                         };
                         
-                        // Verificar se tem histórico de consumo válido
                         if (ucData.history && Array.isArray(ucData.history) && ucData.history.length > 0) {
-                            // Verificar se tem dados reais de consumo e valor
                             const hasValidHistory = ucData.history.some(entry => 
                                 entry["Consumo(kWh)"] && parseFloat(entry["Consumo(kWh)"]) > 0 &&
                                 entry["Valor"] && parseFloat(entry["Valor"]) > 0 &&
@@ -134,26 +133,30 @@ function App() {
                     clientData.consumerUnits = clientUCs;
                     clientData.totalBalance = clientUCs.reduce((sum, uc) => sum + (parseFloat(uc.balanceKWH) || 0), 0);
                     clientData.hasLowBalance = clientData.totalBalance < 100;
-                    clientData.hasHistoryData = hasHistoryData; // NOVO: Flag para filtrar
+                    clientData.hasHistoryData = hasHistoryData;
                     
                     // FILTRO: Apenas incluir clientes com histórico de dados
                     if (hasHistoryData) {
                         clientsData.push(clientData);
                     }
-                    
-                } catch (error) {
-                    console.error(`Erro ao buscar UCs do cliente ${doc.id}:`, error);
-                    // Não incluir clientes com erro = sem dados úteis
-                }
-            }
-            
-            setClients(clientsData);
-            setConsumerUnits(allConsumerUnits);
-            setLoading(false);
-            setLastUpdate(new Date());
-        });
+                });
 
-        return () => unsubscribeClients();
+                // Esperar todas as buscas de UCs terminarem
+                await Promise.all(clientProcessingPromises);
+                
+                setClients(clientsData);
+                setConsumerUnits(allConsumerUnits);
+                setLastUpdate(new Date());
+
+            } catch (error) {
+                console.error("Erro ao buscar dados do Firestore:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData(); // Executa a busca
+        
     }, [authReady]);
 
     // Navegação entre views
@@ -197,7 +200,7 @@ function App() {
                                 {clients.length} analisados | {totalClientsInDB} total no DB
                             </div>
                             <div className="text-sm text-green-400">
-                                {((clients.length / totalClientsInDB) * 100).toFixed(1)}% com dados válidos
+                                {totalClientsInDB > 0 ? ((clients.length / totalClientsInDB) * 100).toFixed(1) : '0'}% com dados válidos
                             </div>
                         </div>
                     </div>

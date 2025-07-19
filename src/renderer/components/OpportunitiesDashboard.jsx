@@ -2,7 +2,26 @@ const { useMemo, useState } = React;
 
 const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
     const [sortBy, setSortBy] = useState('balance'); // balance, potential, urgency
+    const [sortDirection, setSortDirection] = useState('asc'); // asc, desc
     const [filterType, setFilterType] = useState('all'); // all, urgent, medium, low
+
+    // Função para alterar ordenação
+    const handleSort = (column) => {
+        if (sortBy === column) {
+            // Se já está ordenando por esta coluna, inverte a direção
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            // Nova coluna, sempre começa crescente
+            setSortBy(column);
+            setSortDirection('asc');
+        }
+    };
+
+    // Ícone da seta para indicar ordenação
+    const getSortIcon = (column) => {
+        if (sortBy !== column) return '↕️'; // Sem ordenação
+        return sortDirection === 'asc' ? '🔼' : '🔽';
+    };
 
     // Calcular oportunidades com scoring
     const opportunities = useMemo(() => {
@@ -92,17 +111,54 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
                 return client.category === filterType;
             })
             .sort((a, b) => {
+                let aValue, bValue;
+                
                 switch (sortBy) {
+                    case 'name':
+                        aValue = a.name?.toLowerCase() || '';
+                        bValue = b.name?.toLowerCase() || '';
+                        break;
                     case 'balance':
-                        return a.totalBalance - b.totalBalance;
+                        aValue = a.totalBalance || 0;
+                        bValue = b.totalBalance || 0;
+                        break;
                     case 'potential':
-                        return b.suggestedExpansion - a.suggestedExpansion;
+                        aValue = a.suggestedExpansion || 0;
+                        bValue = b.suggestedExpansion || 0;
+                        break;
                     case 'urgency':
+                        aValue = a.opportunityScore || 0;
+                        bValue = b.opportunityScore || 0;
+                        break;
+                    case 'consumption':
+                        aValue = a.monthlyConsumption || 0;
+                        bValue = b.monthlyConsumption || 0;
+                        break;
+                    case 'monthlyPaid':
+                        aValue = a.monthlyPaid || 0;
+                        bValue = b.monthlyPaid || 0;
+                        break;
+                    case 'category':
+                        const categoryOrder = { 'urgent': 3, 'medium': 2, 'low': 1 };
+                        aValue = categoryOrder[a.category] || 0;
+                        bValue = categoryOrder[b.category] || 0;
+                        break;
                     default:
-                        return b.opportunityScore - a.opportunityScore;
+                        aValue = a.opportunityScore || 0;
+                        bValue = b.opportunityScore || 0;
                 }
+                
+                // Comparação baseada no tipo de dados
+                let comparison = 0;
+                if (typeof aValue === 'string') {
+                    comparison = aValue.localeCompare(bValue);
+                } else {
+                    comparison = aValue - bValue;
+                }
+                
+                return sortDirection === 'asc' ? comparison : -comparison;
             });
-    }, [clients, sortBy, filterType]);
+    }, [clients, sortBy, sortDirection, filterType]);
 
     // Estatísticas das oportunidades
     const stats = useMemo(() => {
@@ -146,16 +202,20 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
                         <option value="low">💡 Baixas</option>
                     </select>
                     
-                    {/* Ordenação */}
-                    <select 
-                        value={sortBy} 
-                        onChange={(e) => setSortBy(e.target.value)}
-                        className="bg-gray-700 border border-gray-600 text-white px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value="urgency">Ordenar por Urgência</option>
-                        <option value="balance">Ordenar por Saldo</option>
-                        <option value="potential">Ordenar por Potencial</option>
-                    </select>
+                    {/* Indicador de Ordenação Atual */}
+                    <div className="flex items-center px-3 py-2 bg-gray-800 rounded-lg border border-gray-600">
+                        <span className="text-gray-400 text-sm mr-2">Ordenado por:</span>
+                        <span className="text-white text-sm capitalize">
+                            {sortBy === 'name' ? 'Nome' :
+                             sortBy === 'balance' ? 'Saldo' :
+                             sortBy === 'potential' ? 'Potencial' :
+                             sortBy === 'urgency' ? 'Urgência' :
+                             sortBy === 'consumption' ? 'Consumo' :
+                             sortBy === 'monthlyPaid' ? 'Valor Pago' :
+                             sortBy === 'category' ? 'Categoria' : 'Urgência'}
+                        </span>
+                        <span className="ml-1">{getSortIcon(sortBy)}</span>
+                    </div>
                 </div>
             </div>
 
@@ -196,35 +256,89 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
             {/* Lista de Oportunidades */}
             <div className="bg-gray-800 rounded-lg border border-gray-700">
                 <div className="p-6 border-b border-gray-700">
-                    <h3 className="text-lg font-semibold text-white">
-                        Lista de Oportunidades ({opportunities.length})
-                    </h3>
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-white">
+                            Lista de Oportunidades ({opportunities.length})
+                        </h3>
+                        <div className="text-sm text-gray-400">
+                            💡 Clique nas colunas para ordenar
+                        </div>
+                    </div>
                 </div>
                 
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-gray-700">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    Cliente
+                                <th 
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors select-none"
+                                    onClick={() => handleSort('name')}
+                                    title="Clique para ordenar por nome"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Cliente</span>
+                                        <span className="text-sm">{getSortIcon('name')}</span>
+                                    </div>
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    Score
+                                <th 
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors select-none"
+                                    onClick={() => handleSort('urgency')}
+                                    title="Clique para ordenar por score de urgência"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Score</span>
+                                        <span className="text-sm">{getSortIcon('urgency')}</span>
+                                    </div>
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    Saldo Atual
+                                <th 
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors select-none"
+                                    onClick={() => handleSort('balance')}
+                                    title="Clique para ordenar por saldo atual"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Saldo Atual</span>
+                                        <span className="text-sm">{getSortIcon('balance')}</span>
+                                    </div>
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    Consumo/Mês
+                                <th 
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors select-none"
+                                    onClick={() => handleSort('consumption')}
+                                    title="Clique para ordenar por consumo mensal"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Consumo/Mês</span>
+                                        <span className="text-sm">{getSortIcon('consumption')}</span>
+                                    </div>
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    Valor Pago/Mês
+                                <th 
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors select-none"
+                                    onClick={() => handleSort('monthlyPaid')}
+                                    title="Clique para ordenar por valor pago mensalmente"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Valor Pago/Mês</span>
+                                        <span className="text-sm">{getSortIcon('monthlyPaid')}</span>
+                                    </div>
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    Expansão Sugerida
+                                <th 
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors select-none"
+                                    onClick={() => handleSort('potential')}
+                                    title="Clique para ordenar por potencial de expansão"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Expansão Sugerida</span>
+                                        <span className="text-sm">{getSortIcon('potential')}</span>
+                                    </div>
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                    Categoria
+                                <th 
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors select-none"
+                                    onClick={() => handleSort('category')}
+                                    title="Clique para ordenar por categoria"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>Categoria</span>
+                                        <span className="text-sm">{getSortIcon('category')}</span>
+                                    </div>
                                 </th>
                             </tr>
                         </thead>

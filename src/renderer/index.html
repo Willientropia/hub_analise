@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Analytics Dashboard</title>
+    
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Chart.js for advanced charts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="./output.css">
+
+    <!-- Firebase ES Modules -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, doc, onSnapshot, query, getDocs, where, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkzz0CflvDNXcoa30-_fSIwD62SBF29SQ",
+            authDomain: "hubmonitoramento.firebaseapp.com",
+            projectId: "hubmonitoramento",
+            storageBucket: "hubmonitoramento.appspot.com",
+            messagingSenderId: "828068813283",
+            appId: "1:828068813283:web:f2a3f64efeff8a7f88e8d6",
+            measurementId: "G-QF0ETTB8Y2"
+        };
+
+        // Disponibiliza Firebase globalmente para React
+        window.firebase = {
+            app: initializeApp(firebaseConfig),
+            getAuth,
+            signInAnonymously,
+            onAuthStateChanged,
+            getFirestore,
+            collection,
+            doc,
+            onSnapshot,
+            query,
+            getDocs,
+            where,
+            orderBy
+        };
+    </script>
+
+    <style>
+        /* Dark theme styles */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #111827;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Custom scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #374151;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #6B7280;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9CA3AF;
+        }
+
+        /* Smooth transitions */
+        * {
+            transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        /* Loading animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Custom gradient backgrounds */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .gradient-border {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 1px;
+            border-radius: 8px;
+        }
+
+        .gradient-border > div {
+            background: #1f2937;
+            border-radius: 7px;
+        }
+
+        /* Chart container styles */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Table hover effects */
+        .table-row-hover:hover {
+            background-color: #374151 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Responsive grid adjustments */
+        @media (max-width: 768px) {
+            .grid-responsive {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Focus styles for accessibility */
+        button:focus,
+        select:focus,
+        input:focus {
+            outline: 2px solid #3B82F6;
+            outline-offset: 2px;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid #374151;
+            border-top: 3px solid #3B82F6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <!-- Load React components -->
+    <script type="text/babel" src="./components/OverviewDashboard.jsx"></script>
+    <script type="text/babel" src="./components/OpportunitiesDashboard.jsx"></script>
+    <script type="text/babel" src="./components/RegionalDashboard.jsx"></script>
+    <script type="text/babel" src="./components/TrendsDashboard.jsx"></script>
+    <script type="text/babel" src="./App.jsx"></script>
+    <script type="text/babel" src="./index.js"></script>
+    
+    <script>
+        // Global error handler for better debugging
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e.error);
+        });
+
+        // Performance monitoring
+        window.addEventListener('load', () => {
+            const loadTime = performance.now();
+            console.log(`🚀 Solar Analytics Dashboard carregado em ${Math.round(loadTime)}ms`);
+        });
+    </script>
+</body>
+</html>

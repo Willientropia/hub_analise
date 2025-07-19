@@ -1,104 +1,92 @@
-# Hub de Análise de Dados - Energia Solar
+# Solar Analytics Dashboard
 
-Aplicativo desktop desenvolvido em Electron para análise de dados de clientes de energia solar, conectado ao Firebase para visualização de consumo, economia e histórico de energia.
+Dashboard de Analytics para Gestão Solar - Identificação de Oportunidades
+
+## 📋 Descrição
+
+Sistema desktop desenvolvido em Electron + React para análise e monitoramento de dados de energia solar, identificação de oportunidades de otimização e gestão de clientes.
+
+## 🏗️ Estrutura do Projeto
+
+```
+├── src/
+│   ├── main/
+│   │   └── main.js              # Processo principal Electron
+│   ├── preload/
+│   │   └── preload.js           # Segurança/ponte
+│   └── renderer/
+│       ├── index.html           # HTML principal
+│       ├── index.js             # Entry point
+│       ├── App.jsx              # Componente principal
+│       └── components/
+│           ├── OverviewDashboard.jsx
+│           ├── OpportunitiesDashboard.jsx
+│           ├── RegionalDashboard.jsx
+│           └── TrendsDashboard.jsx
+├── package.json
+├── tailwind.config.js
+└── README.md
+```
 
 ## 🚀 Funcionalidades
 
-- **Lista de Clientes**: Visualização e busca de todos os clientes solares
-- **Dashboard de Análise**: Análise detalhada por cliente com:
-  - Cards de resumo (custo total, valor pago, economia gerada)
-  - Gráficos de consumo mensal vs economia
-  - Tabela histórica detalhada
-  - Saldos por unidade consumidora
-- **Autenticação Firebase**: Login anônimo automático
-- **Interface Responsiva**: Design clean com Tailwind CSS
+- **Overview Dashboard**: Visão geral dos dados de energia solar
+- **Opportunities Dashboard**: Identificação de oportunidades de otimização
+- **Regional Dashboard**: Análise por regiões geográficas
+- **Trends Dashboard**: Análise de tendências e previsões
 
 ## 🛠️ Tecnologias
 
-- **Electron**: Framework para aplicativo desktop
-- **React 18**: Interface de usuário
-- **Firebase Firestore**: Banco de dados em tempo real
-- **Chart.js**: Gráficos interativos
+- **Electron**: Framework para aplicações desktop
+- **React**: Interface de usuário
 - **Tailwind CSS**: Estilização
-- **Babel**: Transpilação JSX
+- **Chart.js**: Gráficos e visualizações
+- **Firebase**: Banco de dados e autenticação
 
 ## 📦 Instalação
 
-1. Clone o repositório:
 ```bash
-git clone https://github.com/Willientropia/hub_analise.git
-cd hub_analise
-```
-
-2. Instale as dependências:
-```bash
+# Instalar dependências
 npm install
-```
 
-3. Execute a aplicação:
-```bash
+# Construir CSS do Tailwind
+npm run build-css
+
+# Executar em modo desenvolvimento
+npm run dev
+
+# Executar aplicação
 npm start
 ```
 
-## 🏗️ Scripts Disponíveis
+## 🔧 Scripts Disponíveis
 
-- `npm start`: Inicia a aplicação Electron
-- `npm run build-css`: Compila o CSS do Tailwind
-- `npm run watch-css`: Observa mudanças no CSS
+- `npm start` - Executa a aplicação Electron
+- `npm run dev` - Executa em modo desenvolvimento com watch do CSS
+- `npm run build-css` - Constrói o CSS do Tailwind
+- `npm run watch-css` - Monitora mudanças no CSS
+- `npm run build` - Constrói a aplicação para distribuição
+- `npm run build-win` - Constrói especificamente para Windows
 
-## 📂 Estrutura do Projeto
+## 🔐 Configuração
 
-```
-hub_analise/
-├── src/
-│   ├── components/
-│   │   ├── AnalysisDashboard.jsx
-│   │   └── ClientList.jsx
-│   ├── App.jsx
-│   ├── index.js
-│   └── output.css
-├── main.js
-├── preload.js
-├── index.html
-└── package.json
-```
+A aplicação utiliza Firebase para persistência de dados. As configurações estão no arquivo `src/renderer/index.html`.
 
-## 🔥 Configuração Firebase
-
-O projeto está configurado para conectar ao Firebase com as seguintes coleções:
-- `solar-clients`: Dados dos clientes
-- `consumerUnits`: Unidades consumidoras (subcoleção)
-
-## 📊 Cálculos de Economia
-
-- **Preço kWh**: R$ 0,99 (configurável)
-- **Economia**: (Consumo × Preço kWh) - Valor Pago
-- **Agregação**: Dados mensais consolidados por cliente
-
-## 🔐 Segurança
-
-- Autenticação anônima habilitada
-- Content Security Policy (CSP) configurada
-- Isolamento de contexto habilitado
-
-## 🚧 Desenvolvimento
+## 👨‍💻 Desenvolvimento
 
 Para contribuir com o projeto:
 
 1. Faça um fork do repositório
 2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Abra um Pull Request
+3. Implemente suas mudanças
+4. Execute os testes
+5. Abra um Pull Request
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT.
+Este projeto é privado e de propriedade de Pedro Willie.
 
-## 🐛 Problemas Conhecidos
+## 📞 Contato
 
-- Avisos de cache do Electron (não afetam funcionalidade)
-- Erro dragEvent ocasional (não crítico)
-
-## 📞 Suporte
-
-Para dúvidas ou problemas, abra uma issue no GitHub.
+**Autor**: Pedro Willie  
+**Email**: [seu-email@exemplo.com]

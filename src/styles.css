@@ -38,7 +38,6 @@
     /* Altura mínima para scroll fluido */
     min-height: 100vh;
     /* GPU acceleration */
-    transform: translateZ(0);
   }
 
   /* Otimização para containers scrolláveis */

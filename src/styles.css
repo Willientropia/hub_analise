@@ -6,21 +6,72 @@
 /* Fontes */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* OTIMIZAÇÕES DE PERFORMANCE */
+* {
+  /* Hardware acceleration para elementos que fazem transform */
+  will-change: auto;
+  /* Reduzir repaints */
+  backface-visibility: hidden;
+  /* Suavizar fontes */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 /* Estilos customizados para Solar Analytics Dashboard */
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
+    /* Scroll suave nativo */
+    scroll-behavior: smooth;
+    /* Otimização de scroll no iOS */
+    -webkit-overflow-scrolling: touch;
   }
   
   body {
     @apply bg-gray-900 text-white antialiased;
+    /* Remover margin/padding padrão que pode causar problemas de scroll */
+    margin: 0;
+    padding: 0;
+    /* Overflow otimizado */
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* Altura mínima para scroll fluido */
+    min-height: 100vh;
+    /* GPU acceleration */
+    transform: translateZ(0);
+  }
+
+  /* Otimização para containers scrolláveis */
+  .scroll-container {
+    /* Scroll momentum no iOS */
+    -webkit-overflow-scrolling: touch;
+    /* Scroll suave */
+    scroll-behavior: smooth;
+    /* GPU acceleration */
+    will-change: scroll-position;
+    transform: translateZ(0);
   }
 }
 
 @layer components {
-  /* Botão padrão do analytics */
+  /* Botão padrão do analytics com performance otimizada */
   .btn-analytics {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply px-4 py-2 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2;
+    /* Transições otimizadas - apenas propriedades que não causam reflow */
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    /* GPU acceleration */
+    will-change: background-color, box-shadow, transform;
+    /* Cursor pointer */
+    cursor: pointer;
+  }
+  
+  .btn-analytics:hover {
+    /* Micro-interação suave */
+    transform: translateY(-1px);
+  }
+  
+  .btn-analytics:active {
+    transform: translateY(0);
   }
   
   .btn-primary {
@@ -43,35 +94,64 @@
     @apply btn-analytics bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
   }
 
-  /* Cards do analytics */
+  /* Cards do analytics com performance otimizada */
   .analytics-card {
-    @apply bg-gray-800 rounded-lg border border-gray-700 p-6 transition-all duration-200 hover:border-gray-600;
+    @apply bg-gray-800 rounded-lg border border-gray-700 p-6;
+    /* Transições otimizadas */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    /* GPU acceleration */
+    will-change: border-color, box-shadow, transform;
+  }
+  
+  .analytics-card:hover {
+    @apply border-gray-600;
   }
   
   .analytics-card-hover {
-    @apply analytics-card hover:shadow-lg hover:shadow-gray-900/50 hover:-translate-y-1;
+    @apply analytics-card;
+  }
+  
+  .analytics-card-hover:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
   }
 
-  /* Formulários */
+  /* Formulários otimizados */
   .form-input {
     @apply w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    /* Transição suave apenas para propriedades necessárias */
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   
   .form-select {
     @apply form-input appearance-none bg-gray-700 pr-8;
   }
 
-  /* Tabelas */
+  /* Tabelas otimizadas */
   .analytics-table {
     @apply w-full bg-gray-800 rounded-lg overflow-hidden border border-gray-700;
+    /* Otimização para tabelas grandes */
+    table-layout: fixed;
   }
   
   .analytics-table thead {
     @apply bg-gray-700;
+    /* Sticky header */
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
   
   .analytics-table th {
     @apply px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider;
+    /* Cursor para colunas clicáveis */
+    cursor: pointer;
+    /* Transição suave */
+    transition: background-color 0.15s ease;
+  }
+  
+  .analytics-table th:hover {
+    @apply bg-gray-600;
   }
   
   .analytics-table td {
@@ -79,7 +159,16 @@
   }
   
   .analytics-table tbody tr {
-    @apply border-b border-gray-700 hover:bg-gray-700/50 transition-colors;
+    @apply border-b border-gray-700;
+    /* Transições otimizadas */
+    transition: background-color 0.15s ease, transform 0.15s ease;
+    cursor: pointer;
+  }
+  
+  .analytics-table tbody tr:hover {
+    @apply bg-gray-700;
+    /* Micro-interação */
+    transform: translateX(2px);
   }
 
   /* Status badges */
@@ -103,9 +192,12 @@
     @apply status-badge bg-blue-900/30 text-blue-300 border border-blue-600/30;
   }
 
-  /* Loading states */
+  /* Loading states otimizados */
   .skeleton {
-    @apply animate-pulse bg-gray-700 rounded;
+    background: linear-gradient(90deg, #374151 25%, #4B5563 50%, #374151 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
   }
   
   .skeleton-text {
@@ -123,6 +215,8 @@
   /* Charts */
   .chart-container {
     @apply relative w-full h-64 bg-gray-800 rounded-lg p-4;
+    /* Otimização para rendering de gráficos */
+    contain: layout style paint;
   }
   
   .chart-legend {
@@ -133,7 +227,32 @@
     @apply flex items-center gap-2 text-sm text-gray-400;
   }
 
-  /* Gradients */
+  /* Modal otimizado */
+  .modal-overlay {
+    /* Backdrop otimizado */
+    backdrop-filter: blur(4px);
+    /* GPU acceleration */
+    will-change: opacity;
+    transition: opacity 0.2s ease;
+  }
+  
+  .modal-content {
+    /* GPU acceleration */
+    will-change: transform, opacity;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  
+  .modal-enter {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  
+  .modal-enter-active {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  /* Gradients otimizados */
   .gradient-blue {
     background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%);
   }
@@ -156,50 +275,86 @@
 }
 
 @layer utilities {
-  /* Utilitários customizados */
-  .text-glow {
-    text-shadow: 0 0 10px currentColor;
+  /* Utilitários de performance */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
   }
   
-  .border-glow {
-    box-shadow: 0 0 10px currentColor;
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
   }
   
-  /* Scrollbar customizada */
+  /* Scrollbar customizada e otimizada */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #6B7280 #374151;
+  }
+  
   .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-track {
-    @apply bg-gray-800 rounded;
+    background: #374151;
+    border-radius: 4px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply bg-gray-600 rounded hover:bg-gray-500;
+    background: #6B7280;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #9CA3AF;
   }
 
-  /* Animations */
+  /* Animations otimizadas */
   .animate-fadeIn {
-    animation: fadeIn 0.5s ease-in-out;
+    animation: fadeIn 0.3s ease-out;
   }
   
   .animate-slideUp {
     animation: slideUp 0.3s ease-out;
   }
   
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite alternate;
+  .animate-pulse-custom {
+    animation: pulseCustom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  /* Hover effects otimizados */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Focus states acessíveis */
+  .focus-visible-ring {
+    transition: box-shadow 0.15s ease;
+  }
+  
+  .focus-visible-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #3B82F6;
   }
 }
 
-/* Keyframes */
+/* Keyframes otimizados */
 @keyframes fadeIn {
   from { 
     opacity: 0; 
+    transform: translateY(10px);
   }
   to { 
     opacity: 1; 
+    transform: translateY(0);
   }
 }
 
@@ -214,16 +369,105 @@
   }
 }
 
-@keyframes glow {
-  from { 
-    box-shadow: 0 0 5px currentColor; 
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
   }
-  to { 
-    box-shadow: 0 0 20px currentColor; 
+  100% {
+    background-position: -200% 0;
   }
 }
 
-/* Print styles (para exportação) */
+@keyframes pulseCustom {
+  0%, 100% { 
+    opacity: 1; 
+  }
+  50% { 
+    opacity: 0.7; 
+  }
+}
+
+/* OTIMIZAÇÕES ESPECÍFICAS PARA SCROLL */
+
+/* Container principal com scroll otimizado */
+.main-container {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Scroll momentum nativo */
+  -webkit-overflow-scrolling: touch;
+  /* Scroll behavior suave */
+  scroll-behavior: smooth;
+  /* GPU acceleration para scroll */
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+/* Header fixo otimizado */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  /* Backdrop blur para efeito glassmorphism */
+  backdrop-filter: blur(8px);
+  /* GPU acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Tabelas com scroll virtual otimizado */
+.table-container {
+  /* Container com scroll otimizado */
+  overflow: auto;
+  /* Scroll momentum */
+  -webkit-overflow-scrolling: touch;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  /* Contenção para melhor performance */
+  contain: layout style paint;
+}
+
+/* Otimizações para dispositivos móveis */
+@media (max-width: 768px) {
+  .main-container {
+    /* Scroll otimizado para mobile */
+    -webkit-overflow-scrolling: touch;
+    /* Remover bounce no iOS */
+    overscroll-behavior-y: none;
+  }
+  
+  /* Tabelas responsivas */
+  .analytics-table {
+    font-size: 14px;
+  }
+  
+  .analytics-table th,
+  .analytics-table td {
+    padding: 12px 8px;
+  }
+}
+
+/* Otimizações para telas grandes */
+@media (min-width: 1920px) {
+  .main-container {
+    /* Scroll bar sempre visível em telas grandes */
+    scrollbar-gutter: stable;
+  }
+}
+
+/* Reduce motion para acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print styles otimizados */
 @media print {
   .no-print {
     display: none !important;
@@ -235,9 +479,208 @@
   
   body {
     @apply bg-white text-black;
+    /* Remover shadows e efeitos para impressão */
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
   }
   
   .analytics-card {
     @apply bg-white border-gray-300 text-black;
+    box-shadow: none !important;
+    transform: none !important;
   }
+  
+  /* Otimizar tabelas para impressão */
+  .analytics-table {
+    page-break-inside: avoid;
+  }
+  
+  .analytics-table thead {
+    display: table-header-group;
+  }
+  
+  .analytics-table tbody {
+    display: table-row-group;
+  }
+}
+
+/* Estilos específicos para o modal */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  /* GPU acceleration */
+  will-change: opacity;
+  /* Smooth transition */
+  transition: opacity 0.2s ease;
+}
+
+.modal-panel {
+  position: relative;
+  background: #1f2937;
+  border-radius: 0.5rem;
+  border: 1px solid #374151;
+  max-width: 56rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  /* Scroll otimizado */
+  -webkit-overflow-scrolling: touch;
+  /* GPU acceleration */
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  /* Smooth transition */
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* Otimizações específicas para gráficos */
+.chart-point {
+  /* GPU acceleration para pontos do gráfico */
+  will-change: transform;
+  transition: transform 0.15s ease;
+}
+
+.chart-point:hover {
+  transform: scale(1.2);
+}
+
+/* Container de gráfico otimizado */
+.chart-svg-container {
+  /* Contenção para melhor performance */
+  contain: layout style paint;
+  /* GPU acceleration */
+  transform: translateZ(0);
+}
+
+/* Loading spinner otimizado */
+.spinner {
+  border: 3px solid #374151;
+  border-top: 3px solid #3B82F6;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  /* GPU acceleration */
+  will-change: transform;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Otimização para elementos que fazem fade in */
+.fade-in-element {
+  opacity: 0;
+  transform: translateY(20px);
+  /* GPU acceleration */
+  will-change: opacity, transform;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-in-element.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Container de cards em grid otimizado */
+.cards-grid {
+  display: grid;
+  gap: 1.5rem;
+  /* Auto-fit responsivo */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  /* Contenção para melhor performance */
+  contain: layout;
+}
+
+/* Botão de scroll to top */
+.scroll-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 30;
+  /* GPU acceleration */
+  will-change: transform, opacity;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  transform: translateY(100px);
+  opacity: 0;
+}
+
+.scroll-to-top.visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Otimizações para seletores */
+select {
+  /* GPU acceleration para dropdowns */
+  will-change: background-color;
+  transition: background-color 0.15s ease;
+}
+
+/* Otimizações para inputs */
+input, textarea {
+  /* GPU acceleration */
+  will-change: border-color, box-shadow;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Container principal da aplicação */
+.app-container {
+  min-height: 100vh;
+  /* Contenção para melhor performance */
+  contain: layout style;
+  /* GPU acceleration */
+  transform: translateZ(0);
+}
+
+/* Header da aplicação */
+.app-header {
+  /* Sticky positioning otimizado */
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  /* Backdrop blur */
+  backdrop-filter: blur(8px);
+  background-color: rgba(31, 41, 55, 0.95);
+  /* GPU acceleration */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Navegação otimizada */
+.nav-button {
+  /* GPU acceleration */
+  will-change: background-color, transform;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.nav-button:hover {
+  transform: translateY(-1px);
+}
+
+.nav-button:active {
+  transform: translateY(0);
+}
+
+/* Container de conteúdo principal */
+.main-content {
+  padding: 1.5rem;
+  /* Contenção para melhor performance */
+  contain: layout style;
+}
+
+/* Otimizações finais */
+.performance-optimized {
+  /* Força GPU acceleration */
+  transform: translateZ(0);
+  /* Otimiza repaint */
+  will-change: auto;
+  /* Remove outline padrão */
+  outline: none;
 }

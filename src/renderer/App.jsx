@@ -1,6 +1,6 @@
 const { useState, useEffect } = React;
 
-// Componente para mostrar estatísticas de filtro
+// Componente para mostrar estatísticas de filtro (APENAS NA VISÃO GERAL)
 const DataFilterStats = ({ totalClientsInDB, clientsWithHistory, clientsWithoutHistory }) => {
     return (
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
@@ -74,18 +74,16 @@ function App() {
         });
     }, []);
 
-    // Carregamento de dados (MODIFICADO)
+    // Carregamento de dados
     useEffect(() => {
         if (!authReady) return;
 
-        // Função assíncrona para buscar os dados uma única vez
         const fetchData = async () => {
             setLoading(true);
             const { getFirestore, collection, query, getDocs } = window.firebase;
             const db = getFirestore();
             
             try {
-                // 1. Buscar todos os clientes
                 const clientsQuery = query(collection(db, 'solar-clients'));
                 const querySnapshot = await getDocs(clientsQuery);
 
@@ -94,7 +92,6 @@ function App() {
                 
                 setTotalClientsInDB(querySnapshot.docs.length);
 
-                // 2. Processar cada cliente em paralelo para buscar suas UCs
                 const clientProcessingPromises = querySnapshot.docs.map(async (doc) => {
                     const clientData = { id: doc.id, ...doc.data() };
                     
@@ -135,13 +132,11 @@ function App() {
                     clientData.hasLowBalance = clientData.totalBalance < 100;
                     clientData.hasHistoryData = hasHistoryData;
                     
-                    // FILTRO: Apenas incluir clientes com histórico de dados
                     if (hasHistoryData) {
                         clientsData.push(clientData);
                     }
                 });
 
-                // Esperar todas as buscas de UCs terminarem
                 await Promise.all(clientProcessingPromises);
                 
                 setClients(clientsData);
@@ -155,11 +150,10 @@ function App() {
             }
         };
 
-        fetchData(); // Executa a busca
+        fetchData();
         
     }, [authReady]);
 
-    // Navegação entre views
     const views = [
         { id: 'overview', label: 'Visão Geral', icon: '📊' },
         { id: 'opportunities', label: 'Oportunidades', icon: '🎯' },
@@ -182,7 +176,7 @@ function App() {
     return (
         <div className="min-h-screen bg-gray-900 text-white">
             {/* Header */}
-            <header className="bg-gray-800 border-b border-gray-700">
+            <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
@@ -205,7 +199,6 @@ function App() {
                         </div>
                     </div>
                     
-                    {/* Navigation */}
                     <nav className="mt-4">
                         <div className="flex space-x-1">
                             {views.map(view => (
@@ -229,16 +222,22 @@ function App() {
 
             {/* Main Content */}
             <main className="p-6">
-                {/* Data Filter Statistics */}
-                {totalClientsInDB > 0 && clients.length < totalClientsInDB && (
-                    <DataFilterStats 
-                        totalClientsInDB={totalClientsInDB}
-                        clientsWithHistory={clients.length}
-                        clientsWithoutHistory={totalClientsInDB - clients.length}
-                    />
+                {activeView === 'overview' && (
+                    <>
+                        <OverviewDashboard clients={clients} consumerUnits={consumerUnits} totalInDB={totalClientsInDB} />
+                        
+                        {/* Data Filter Statistics - APENAS NA VISÃO GERAL, NO FINAL */}
+                        {totalClientsInDB > 0 && clients.length < totalClientsInDB && (
+                            <div className="mt-8">
+                                <DataFilterStats 
+                                    totalClientsInDB={totalClientsInDB}
+                                    clientsWithHistory={clients.length}
+                                    clientsWithoutHistory={totalClientsInDB - clients.length}
+                                />
+                            </div>
+                        )}
+                    </>
                 )}
-
-                {activeView === 'overview' && <OverviewDashboard clients={clients} consumerUnits={consumerUnits} totalInDB={totalClientsInDB} />}
                 {activeView === 'opportunities' && <OpportunitiesDashboard clients={clients} consumerUnits={consumerUnits} />}
                 {activeView === 'regional' && <RegionalDashboard clients={clients} />}
                 {activeView === 'trends' && <TrendsDashboard clients={clients} consumerUnits={consumerUnits} />}

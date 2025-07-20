@@ -1,29 +1,362 @@
-const { useMemo, useState } = React;
+const { useMemo, useState, useEffect } = React;
+
+// Modal do Cliente
+const ClientModal = ({ client, isOpen, onClose }) => {
+    console.log('ClientModal renderizado:', { client, isOpen });
+    
+    if (!isOpen || !client) {
+        console.log('Modal NÃO será mostrado!', { isOpen, client: !!client });
+        return null;
+    }
+
+    console.log('Modal SERÁ mostrado!');
+
+    // Preparar dados do gráfico
+    const chartData = useMemo(() => {
+        const allHistory = [];
+        
+        client.consumerUnits?.forEach((uc, ucIndex) => {
+            if (uc.history && uc.history.length > 0) {
+                uc.history.forEach(entry => {
+                    if (entry["Consumo(kWh)"] && entry["Referência"]) {
+                        allHistory.push({
+                            month: entry["Referência"],
+                            consumption: parseFloat(entry["Consumo(kWh)"]) || 0,
+                            value: parseFloat(entry["Valor"]) || 0,
+                            ucName: uc.consumerUnitName || `UC ${ucIndex + 1}`,
+                            ucIndex
+                        });
+                    }
+                });
+            }
+        });
+
+        // Ordenar por data
+        return allHistory.sort((a, b) => {
+            const [ma, ya] = a.month.split('/');
+            const [mb, yb] = b.month.split('/');
+            return new Date(ya, ma - 1) - new Date(yb, mb - 1);
+        });
+    }, [client]);
+
+    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+
+    return (
+        <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            style={{
+                position: 'fixed',
+                top: '0px',
+                left: '0px',
+                right: '0px',
+                bottom: '0px',
+                width: '100vw',
+                height: '100vh',
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                backdropFilter: 'blur(4px)',
+                zIndex: 999999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '1rem'
+            }}
+            onClick={(e) => {
+                // Fechar modal se clicar no backdrop
+                if (e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
+        >
+            <div 
+                className="bg-gray-800 rounded-lg border border-gray-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                style={{
+                    backgroundColor: '#1f2937',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #374151',
+                    maxWidth: '56rem',
+                    width: '100%',
+                    maxHeight: '90vh',
+                    overflowY: 'auto',
+                    position: 'relative',
+                    zIndex: 1000000
+                }}
+                onClick={(e) => {
+                    // Impedir que cliques no modal fechem ele
+                    e.stopPropagation();
+                }}
+            >
+                {/* Header do Modal */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-700">
+                    <div>
+                        <h2 className="text-2xl font-bold text-white">
+                            {client.clientNumber && `${client.clientNumber} - `}{client.name}
+                        </h2>
+                        <p className="text-gray-400 mt-1">{client.address || 'Endereço não informado'}</p>
+                    </div>
+                    <button 
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700 rounded-lg"
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Conteúdo do Modal */}
+                <div className="p-6 space-y-6">
+                    {/* Informações Básicas */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-gray-700/50 p-4 rounded-lg">
+                            <p className="text-gray-400 text-sm">Potência Instalada</p>
+                            <p className="text-white text-2xl font-bold">{client.power} kWp</p>
+                        </div>
+                        <div className="bg-gray-700/50 p-4 rounded-lg">
+                            <p className="text-gray-400 text-sm">Saldo Total</p>
+                            <p className="text-white text-2xl font-bold">{(client.totalBalance || 0).toFixed(0)} kWh</p>
+                        </div>
+                        <div className="bg-gray-700/50 p-4 rounded-lg">
+                            <p className="text-gray-400 text-sm">Status</p>
+                            <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                client.status === 'active' ? 'bg-green-900/30 text-green-300' :
+                                client.status === 'expired' ? 'bg-red-900/30 text-red-300' :
+                                'bg-blue-900/30 text-blue-300'
+                            }`}>
+                                {client.status === 'active' ? 'Em Garantia' :
+                                 client.status === 'expired' ? 'Expirada' :
+                                 client.status || 'N/A'}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Unidades Consumidoras */}
+                    <div>
+                        <h3 className="text-lg font-semibold text-white mb-4">Unidades Consumidoras ({client.consumerUnits?.length || 0})</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {client.consumerUnits?.map((uc, index) => (
+                                <div key={uc.id} className="bg-gray-700/50 p-4 rounded-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h4 className="text-white font-medium">
+                                            {uc.consumerUnitName || `UC ${index + 1}`}
+                                        </h4>
+                                        <div 
+                                            className="w-3 h-3 rounded-full"
+                                            style={{ backgroundColor: colors[index % colors.length] }}
+                                        ></div>
+                                    </div>
+                                    <div className="space-y-1 text-sm">
+                                        <p className="text-gray-400">
+                                            Saldo: <span className="text-white">{(parseFloat(uc.balanceKWH) || 0).toFixed(0)} kWh</span>
+                                        </p>
+                                        <p className="text-gray-400">
+                                            Histórico: <span className="text-white">
+                                                {uc.history?.length || 0} registros
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Gráfico de Histórico */}
+                    {chartData.length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-white mb-4">Histórico de Consumo</h3>
+                            <div className="bg-gray-700/50 p-4 rounded-lg">
+                                <ConsumptionChart data={chartData} colors={colors} />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Resumo Financeiro */}
+                    {chartData.length > 0 && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-white mb-4">Resumo Financeiro</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="bg-gray-700/50 p-4 rounded-lg">
+                                    <p className="text-gray-400 text-sm">Consumo Médio Mensal</p>
+                                    <p className="text-white text-xl font-bold">
+                                        {(chartData.reduce((sum, item) => sum + item.consumption, 0) / chartData.length).toFixed(0)} kWh
+                                    </p>
+                                </div>
+                                <div className="bg-gray-700/50 p-4 rounded-lg">
+                                    <p className="text-gray-400 text-sm">Valor Médio Mensal</p>
+                                    <p className="text-white text-xl font-bold">
+                                        R$ {(chartData.reduce((sum, item) => sum + item.value, 0) / chartData.length).toFixed(0)}
+                                    </p>
+                                </div>
+                                <div className="bg-gray-700/50 p-4 rounded-lg">
+                                    <p className="text-gray-400 text-sm">Período Analisado</p>
+                                    <p className="text-white text-xl font-bold">{chartData.length} meses</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Componente do Gráfico de Consumo
+const ConsumptionChart = ({ data, colors }) => {
+    const ucGroups = useMemo(() => {
+        const groups = {};
+        data.forEach(item => {
+            if (!groups[item.ucName]) {
+                groups[item.ucName] = [];
+            }
+            groups[item.ucName].push(item);
+        });
+        return groups;
+    }, [data]);
+
+    const maxConsumption = Math.max(...data.map(d => d.consumption));
+    const months = [...new Set(data.map(d => d.month))].sort((a, b) => {
+        const [ma, ya] = a.split('/');
+        const [mb, yb] = b.split('/');
+        return new Date(ya, ma - 1) - new Date(yb, mb - 1);
+    });
+
+    return (
+        <div className="w-full h-64">
+            <div className="relative w-full h-full">
+                {/* Eixo Y */}
+                <div className="absolute left-0 top-0 bottom-8 w-16 flex flex-col justify-between text-xs text-gray-400">
+                    {[...Array(5)].map((_, i) => (
+                        <div key={i} className="text-right pr-2">
+                            {Math.round((maxConsumption * (4 - i)) / 4)}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Área do gráfico */}
+                <div className="ml-16 mr-4 h-full relative border-l border-b border-gray-600">
+                    {/* Linhas de grade */}
+                    {[...Array(4)].map((_, i) => (
+                        <div 
+                            key={i}
+                            className="absolute w-full border-t border-gray-700"
+                            style={{ top: `${(i * 100) / 4}%` }}
+                        ></div>
+                    ))}
+
+                    {/* Pontos das UCs */}
+                    {Object.entries(ucGroups).map(([ucName, ucData], ucIndex) => (
+                        <div key={ucName}>
+                            {ucData.map((point, pointIndex) => {
+                                const monthIndex = months.indexOf(point.month);
+                                const x = ((monthIndex + 0.5) / months.length) * 100;
+                                const y = 100 - ((point.consumption / maxConsumption) * 100);
+                                
+                                return (
+                                    <div
+                                        key={`${ucName}-${pointIndex}`}
+                                        className="absolute w-3 h-3 rounded-full border-2 border-white cursor-pointer hover:scale-125 transition-transform"
+                                        style={{
+                                            left: `${x}%`,
+                                            top: `${y}%`,
+                                            backgroundColor: colors[ucIndex % colors.length],
+                                            transform: 'translate(-50%, -50%)'
+                                        }}
+                                        title={`${ucName}: ${point.consumption} kWh em ${point.month}`}
+                                    ></div>
+                                );
+                            })}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Eixo X */}
+                <div className="absolute bottom-0 left-16 right-4 h-8 flex justify-between items-end text-xs text-gray-400">
+                    {months.map((month, index) => (
+                        <div 
+                            key={month}
+                            className="transform -rotate-45 origin-bottom-left"
+                            style={{ width: `${100 / months.length}%` }}
+                        >
+                            {month}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Legenda */}
+            <div className="mt-4 flex flex-wrap gap-4 justify-center">
+                {Object.keys(ucGroups).map((ucName, index) => (
+                    <div key={ucName} className="flex items-center gap-2">
+                        <div 
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: colors[index % colors.length] }}
+                        ></div>
+                        <span className="text-gray-300 text-sm">{ucName}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
-    const [sortBy, setSortBy] = useState('balance'); // balance, potential, urgency
-    const [sortDirection, setSortDirection] = useState('asc'); // asc, desc
-    const [filterType, setFilterType] = useState('all'); // all, urgent, medium, low
+    const [sortBy, setSortBy] = useState('balance');
+    const [sortDirection, setSortDirection] = useState('asc');
+    const [filterType, setFilterType] = useState('all');
+    const [selectedClient, setSelectedClient] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // Função para alterar ordenação
+    // Debug: Monitorar mudanças no estado do modal
+    useEffect(() => {
+        console.log('Estado do modal mudou:', { isModalOpen, selectedClient });
+        
+        // Bloquear scroll quando modal abrir
+        if (isModalOpen) {
+            document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+            console.log('Modal aberto - scroll bloqueado');
+        } else {
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = 'auto';
+            console.log('Modal fechado - scroll liberado');
+        }
+        
+        // Cleanup na desmontagem
+        return () => {
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = 'auto';
+        };
+    }, [isModalOpen, selectedClient]);
+
     const handleSort = (column) => {
         if (sortBy === column) {
-            // Se já está ordenando por esta coluna, inverte a direção
             setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
         } else {
-            // Nova coluna, sempre começa crescente
             setSortBy(column);
             setSortDirection('asc');
         }
     };
 
-    // Ícone da seta para indicar ordenação
     const getSortIcon = (column) => {
-        if (sortBy !== column) return '↕️'; // Sem ordenação
+        if (sortBy !== column) return '↕️';
         return sortDirection === 'asc' ? '🔼' : '🔽';
     };
 
-    // Calcular oportunidades com scoring
+    const handleClientClick = (client) => {
+        console.log('Cliente clicado:', client);
+        console.log('Estado atual - isModalOpen:', isModalOpen, 'selectedClient:', selectedClient);
+        
+        // Garantir que o estado seja limpo antes de definir o novo
+        setIsModalOpen(false);
+        setSelectedClient(null);
+        
+        // Aguardar um tick antes de definir o novo estado
+        setTimeout(() => {
+            setSelectedClient(client);
+            setIsModalOpen(true);
+            console.log('Novo estado definido - Modal deveria aparecer agora');
+        }, 50);
+    };
+
     const opportunities = useMemo(() => {
         return clients
             .map(client => {
@@ -31,65 +364,49 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
                 const power = parseFloat(String(client.power || '0').replace(',', '.')) || 0;
                 const hasHistory = client.hasHistoryData || false;
                 
-                // FILTRO: Só analisar clientes com histórico
                 if (!hasHistory) {
-                    return null; // Excluir da análise
+                    return null;
                 }
                 
-                // Calcular potencial de economia (baseado no histórico se houver)
                 let monthlyConsumption = 0;
                 let monthlyPaid = 0;
                 
                 if (hasHistory) {
                     client.consumerUnits?.forEach(uc => {
                         if (uc.history?.length > 0) {
-                            const recentHistory = uc.history.slice(0, 6); // Últimos 6 meses
+                            const recentHistory = uc.history.slice(0, 6);
                             monthlyConsumption += recentHistory.reduce((sum, h) => sum + (parseFloat(h["Consumo(kWh)"]) || 0), 0) / recentHistory.length;
                             monthlyPaid += recentHistory.reduce((sum, h) => sum + (parseFloat(h["Valor"]) || 0), 0) / recentHistory.length;
                         }
                     });
                 }
                 
-                // Score de oportunidade (0-100)
                 let opportunityScore = 0;
                 
-                // Fator saldo (40% do score)
                 if (balance === 0) opportunityScore += 40;
                 else if (balance < 50) opportunityScore += 30;
                 else if (balance < 100) opportunityScore += 20;
                 else if (balance < 200) opportunityScore += 10;
                 
-                // Fator consumo vs potência instalada (30% do score)
                 if (monthlyConsumption > 0 && power > 0) {
                     const consumptionPerKwp = monthlyConsumption / power;
-                    if (consumptionPerKwp > 150) opportunityScore += 30; // Alto consumo para pouca potência
+                    if (consumptionPerKwp > 150) opportunityScore += 30;
                     else if (consumptionPerKwp > 100) opportunityScore += 20;
                     else if (consumptionPerKwp > 50) opportunityScore += 10;
                 }
                 
-                // Fator valor pago (20% do score)
                 if (monthlyPaid > 200) opportunityScore += 20;
                 else if (monthlyPaid > 100) opportunityScore += 15;
                 else if (monthlyPaid > 50) opportunityScore += 10;
                 
-                // Fator histórico válido (bônus de 5 pontos)
                 if (hasHistory) {
                     opportunityScore += 5;
                 }
                 
-                // Penalizar se não tem histórico (reduzir score)
                 if (!hasHistory) {
                     opportunityScore = Math.max(0, opportunityScore - 20);
                 }
                 
-                // Potencial de expansão (kWp sugerido)
-                let suggestedExpansion = 0;
-                if (monthlyConsumption > 0) {
-                    const neededPower = (monthlyConsumption * 12) / 1200; // Aproximação: 1kWp = 1200kWh/ano
-                    suggestedExpansion = Math.max(0, neededPower - power);
-                }
-                
-                // Categoria da oportunidade
                 let category = 'low';
                 if (opportunityScore >= 70) category = 'urgent';
                 else if (opportunityScore >= 40) category = 'medium';
@@ -99,13 +416,12 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
                     opportunityScore: Math.round(opportunityScore),
                     monthlyConsumption: Math.round(monthlyConsumption),
                     monthlyPaid: Math.round(monthlyPaid),
-                    suggestedExpansion: Math.round(suggestedExpansion * 10) / 10, // 1 casa decimal
                     category,
                     hasHistoryData: hasHistory,
                     balanceStatus: balance === 0 ? 'zero' : balance < 50 ? 'critical' : balance < 100 ? 'low' : 'ok'
                 };
             })
-            .filter(client => client !== null) // Remove clientes sem histórico
+            .filter(client => client !== null)
             .filter(client => {
                 if (filterType === 'all') return client.opportunityScore > 0;
                 return client.category === filterType;
@@ -121,10 +437,6 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
                     case 'balance':
                         aValue = a.totalBalance || 0;
                         bValue = b.totalBalance || 0;
-                        break;
-                    case 'potential':
-                        aValue = a.suggestedExpansion || 0;
-                        bValue = b.suggestedExpansion || 0;
                         break;
                     case 'urgency':
                         aValue = a.opportunityScore || 0;
@@ -148,7 +460,6 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
                         bValue = b.opportunityScore || 0;
                 }
                 
-                // Comparação baseada no tipo de dados
                 let comparison = 0;
                 if (typeof aValue === 'string') {
                     comparison = aValue.localeCompare(bValue);
@@ -160,23 +471,17 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
             });
     }, [clients, sortBy, sortDirection, filterType]);
 
-    // Estatísticas das oportunidades
     const stats = useMemo(() => {
         const total = opportunities.length;
         const urgent = opportunities.filter(o => o.category === 'urgent').length;
         const medium = opportunities.filter(o => o.category === 'medium').length;
         const low = opportunities.filter(o => o.category === 'low').length;
         
-        const totalExpansionPotential = opportunities.reduce((sum, o) => sum + o.suggestedExpansion, 0);
-        const totalMonthlyRevenue = opportunities.reduce((sum, o) => sum + (o.suggestedExpansion * 150), 0); // R$150/kWp/mês estimado
-        
         return {
             total,
             urgent,
             medium,
-            low,
-            totalExpansionPotential: Math.round(totalExpansionPotential * 10) / 10,
-            totalMonthlyRevenue: Math.round(totalMonthlyRevenue)
+            low
         };
     }, [opportunities]);
 
@@ -190,7 +495,6 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
                 </div>
                 
                 <div className="flex flex-wrap gap-4">
-                    {/* Filtro por Categoria */}
                     <select 
                         value={filterType} 
                         onChange={(e) => setFilterType(e.target.value)}
@@ -202,13 +506,11 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
                         <option value="low">💡 Baixas</option>
                     </select>
                     
-                    {/* Indicador de Ordenação Atual */}
                     <div className="flex items-center px-3 py-2 bg-gray-800 rounded-lg border border-gray-600">
                         <span className="text-gray-400 text-sm mr-2">Ordenado por:</span>
                         <span className="text-white text-sm capitalize">
                             {sortBy === 'name' ? 'Nome' :
                              sortBy === 'balance' ? 'Saldo' :
-                             sortBy === 'potential' ? 'Potencial' :
                              sortBy === 'urgency' ? 'Urgência' :
                              sortBy === 'consumption' ? 'Consumo' :
                              sortBy === 'monthlyPaid' ? 'Valor Pago' :
@@ -220,7 +522,7 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
             </div>
 
             {/* Estatísticas das Oportunidades */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <OpportunityStatCard
                     title="Total"
                     value={stats.total}
@@ -240,16 +542,10 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
                     color="bg-orange-600"
                 />
                 <OpportunityStatCard
-                    title="Potencial kWp"
-                    value={`${stats.totalExpansionPotential}`}
-                    icon="⚡"
+                    title="Baixas"
+                    value={stats.low}
+                    icon="💡"
                     color="bg-green-600"
-                />
-                <OpportunityStatCard
-                    title="Receita/Mês"
-                    value={`R$ ${stats.totalMonthlyRevenue.toLocaleString('pt-BR')}`}
-                    icon="💰"
-                    color="bg-purple-600"
                 />
             </div>
 
@@ -261,7 +557,7 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
                             Lista de Oportunidades ({opportunities.length})
                         </h3>
                         <div className="text-sm text-gray-400">
-                            💡 Clique nas colunas para ordenar
+                            💡 Clique nas colunas para ordenar • Clique no cliente para ver detalhes
                         </div>
                     </div>
                 </div>
@@ -322,16 +618,6 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
                                 </th>
                                 <th 
                                     className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors select-none"
-                                    onClick={() => handleSort('potential')}
-                                    title="Clique para ordenar por potencial de expansão"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <span>Expansão Sugerida</span>
-                                        <span className="text-sm">{getSortIcon('potential')}</span>
-                                    </div>
-                                </th>
-                                <th 
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors select-none"
                                     onClick={() => handleSort('category')}
                                     title="Clique para ordenar por categoria"
                                 >
@@ -344,7 +630,12 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
                         </thead>
                         <tbody className="divide-y divide-gray-700">
                             {opportunities.map((opportunity, index) => (
-                                <OpportunityRow key={opportunity.id} opportunity={opportunity} index={index} />
+                                <OpportunityRow 
+                                    key={opportunity.id} 
+                                    opportunity={opportunity} 
+                                    index={index}
+                                    onClick={() => handleClientClick(opportunity)}
+                                />
                             ))}
                         </tbody>
                     </table>
@@ -360,6 +651,40 @@ const OpportunitiesDashboard = ({ clients, consumerUnits }) => {
 
             {/* Insights Automáticos */}
             <OpportunityInsights opportunities={opportunities} stats={stats} />
+
+            {/* Modal do Cliente */}
+            <ClientModal 
+                client={selectedClient}
+                isOpen={isModalOpen}
+                onClose={() => {
+                    console.log('Fechando modal...');
+                    setIsModalOpen(false);
+                    setSelectedClient(null);
+                }}
+            />
+
+            {/* CSS adicional para garantir que o modal apareça */}
+            {isModalOpen && (
+                <style dangerouslySetInnerHTML={{
+                    __html: `
+                        .modal-overlay {
+                            position: fixed !important;
+                            top: 0 !important;
+                            left: 0 !important;
+                            width: 100vw !important;
+                            height: 100vh !important;
+                            background-color: rgba(0, 0, 0, 0.8) !important;
+                            z-index: 999999 !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: center !important;
+                        }
+                        body.modal-open {
+                            overflow: hidden !important;
+                        }
+                    `
+                }} />
+            )}
         </div>
     );
 };
@@ -380,7 +705,7 @@ const OpportunityStatCard = ({ title, value, icon, color }) => (
 );
 
 // Componente Row da Oportunidade
-const OpportunityRow = ({ opportunity, index }) => {
+const OpportunityRow = ({ opportunity, index, onClick }) => {
     const getCategoryColor = (category) => {
         switch (category) {
             case 'urgent': return 'bg-red-900/30 text-red-300';
@@ -409,7 +734,10 @@ const OpportunityRow = ({ opportunity, index }) => {
     };
 
     return (
-        <tr className={`${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'} hover:bg-gray-700 transition-colors`}>
+        <tr 
+            className={`${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'} hover:bg-gray-700 transition-all duration-200 cursor-pointer transform hover:scale-[1.01]`}
+            onClick={onClick}
+        >
             <td className="px-6 py-4">
                 <div>
                     <p className="text-white font-medium">
@@ -447,16 +775,6 @@ const OpportunityRow = ({ opportunity, index }) => {
                 </span>
             </td>
             <td className="px-6 py-4">
-                <div>
-                    <span className="text-white font-medium">+{opportunity.suggestedExpansion} kWp</span>
-                    {opportunity.suggestedExpansion > 0 && (
-                        <p className="text-gray-400 text-xs">
-                            ~R$ {(opportunity.suggestedExpansion * 150).toLocaleString('pt-BR')}/mês
-                        </p>
-                    )}
-                </div>
-            </td>
-            <td className="px-6 py-4">
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(opportunity.category)}`}>
                     {getCategoryLabel(opportunity.category)}
                 </span>
@@ -479,15 +797,6 @@ const OpportunityInsights = ({ opportunities, stats }) => {
             });
         }
         
-        if (stats.totalExpansionPotential > 10) {
-            insights.push({
-                type: 'opportunity',
-                title: 'Grande Potencial de Expansão',
-                message: `${stats.totalExpansionPotential}kWp de potencial de expansão na carteira`,
-                action: `Receita potencial: R$ ${stats.totalMonthlyRevenue.toLocaleString('pt-BR')}/mês`
-            });
-        }
-        
         const noHistoryClients = opportunities.filter(o => !o.hasHistoryData).length;
         if (noHistoryClients > 0) {
             insights.push({
@@ -495,6 +804,15 @@ const OpportunityInsights = ({ opportunities, stats }) => {
                 title: 'Dados Incompletos',
                 message: `${noHistoryClients} clientes sem histórico de consumo`,
                 action: 'Solicitar faturas para análise precisa'
+            });
+        }
+        
+        if (stats.total > 20) {
+            insights.push({
+                type: 'opportunity',
+                title: 'Grande Carteira de Oportunidades',
+                message: `${stats.total} oportunidades identificadas na carteira`,
+                action: 'Segmentar por prioridade para abordagem comercial'
             });
         }
         

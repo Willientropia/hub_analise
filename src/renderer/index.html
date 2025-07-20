@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solar Analytics Dashboard</title>
     
+    <!-- Preconnect para melhor performance -->
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    
     <!-- React CDN -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -53,7 +59,7 @@
     </script>
 
     <style>
-        /* Dark theme styles */
+        /* Critical CSS inline para melhor performance */
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: #111827;
@@ -61,9 +67,17 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
+            /* Otimizações de performance */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            /* GPU acceleration */
+            transform: translateZ(0);
+            /* Scroll otimizado */
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
         }
 
-        /* Custom scrollbar for dark theme */
+        /* Critical scrollbar styles */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -71,95 +85,241 @@
 
         ::-webkit-scrollbar-track {
             background: #374151;
+            border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb {
             background: #6B7280;
             border-radius: 4px;
+            transition: background-color 0.2s ease;
         }
 
         ::-webkit-scrollbar-thumb:hover {
             background: #9CA3AF;
         }
 
-        /* Smooth transitions */
-        * {
-            transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
-        }
-
-        /* Loading animation */
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .animate-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        /* Custom gradient backgrounds */
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .gradient-border {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            padding: 1px;
-            border-radius: 8px;
-        }
-
-        .gradient-border > div {
-            background: #1f2937;
-            border-radius: 7px;
-        }
-
-        /* Chart container styles */
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
-
-        /* Table hover effects */
-        .table-row-hover:hover {
-            background-color: #374151 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Responsive grid adjustments */
-        @media (max-width: 768px) {
-            .grid-responsive {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Focus styles for accessibility */
-        button:focus,
-        select:focus,
-        input:focus {
-            outline: 2px solid #3B82F6;
-            outline-offset: 2px;
-        }
-
-        /* Loading spinner */
-        .spinner {
-            border: 3px solid #374151;
-            border-top: 3px solid #3B82F6;
+        /* Loading spinner crítico */
+        .loading-spinner {
+            border: 4px solid #374151;
+            border-top: 4px solid #3B82F6;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
+            /* GPU acceleration */
+            will-change: transform;
+            transform: translateZ(0);
         }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Smooth transitions otimizadas */
+        * {
+            /* Transições apenas para propriedades que não causam reflow */
+            transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+            /* Hardware acceleration quando necessário */
+            will-change: auto;
+        }
+
+        /* Container principal otimizado */
+        .app-container {
+            min-height: 100vh;
+            /* Contenção para melhor performance */
+            contain: layout style;
+            /* GPU acceleration */
+            transform: translateZ(0);
+        }
+
+        /* Header fixo otimizado */
+        .app-header {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            backdrop-filter: blur(8px);
+            background-color: rgba(31, 41, 55, 0.95);
+            /* GPU acceleration */
+            will-change: transform;
+            transform: translateZ(0);
+            /* Border bottom */
+            border-bottom: 1px solid #374151;
+        }
+
+        /* Tabelas otimizadas */
+        .optimized-table {
+            /* Layout fixo para melhor performance */
+            table-layout: fixed;
+            /* GPU acceleration */
+            transform: translateZ(0);
+            /* Contenção */
+            contain: layout style;
+        }
+
+        .optimized-table tbody tr {
+            /* Cursor pointer */
+            cursor: pointer;
+            /* GPU acceleration */
+            will-change: background-color, transform;
+        }
+
+        .optimized-table tbody tr:hover {
+            background-color: #374151;
+            /* Micro-interação suave */
+            transform: translateX(2px);
+        }
+
+        /* Modal otimizado */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+            /* GPU acceleration */
+            will-change: opacity;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-backdrop.visible {
+            opacity: 1;
+        }
+
+        .modal-content {
+            /* GPU acceleration */
+            will-change: transform, opacity;
+            transform: scale(0.95) translateY(20px);
+            opacity: 0;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .modal-content.visible {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        /* Cards com hover otimizado */
+        .hover-card {
+            /* GPU acceleration */
+            will-change: transform, box-shadow;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .hover-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Botões otimizados */
+        .btn-optimized {
+            /* GPU acceleration */
+            will-change: background-color, transform, box-shadow;
+            transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+            cursor: pointer;
+        }
+
+        .btn-optimized:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-optimized:active {
+            transform: translateY(0);
+        }
+
+        /* Focus states acessíveis */
+        .focus-ring:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px #3B82F6;
+        }
+
+        /* Scroll container otimizado */
+        .scroll-container {
+            /* Scroll momentum */
+            -webkit-overflow-scrolling: touch;
+            /* GPU acceleration */
+            will-change: scroll-position;
+            transform: translateZ(0);
+            /* Scroll suave */
+            scroll-behavior: smooth;
+            /* Contenção */
+            contain: layout style paint;
+        }
+
+        /* Grid otimizado */
+        .optimized-grid {
+            display: grid;
+            gap: 1.5rem;
+            /* Auto-fit responsivo */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            /* Contenção */
+            contain: layout;
+        }
+
+        /* Preloader para evitar flash */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            /* GPU acceleration */
+            will-change: opacity;
+            transition: opacity 0.3s ease;
+        }
+
+        .preloader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Otimizações para mobile */
+        @media (max-width: 768px) {
+            body {
+                /* Scroll otimizado para mobile */
+                -webkit-overflow-scrolling: touch;
+                /* Remover bounce no iOS */
+                overscroll-behavior-y: none;
+            }
+            
+            .optimized-table {
+                font-size: 14px;
+            }
+        }
+
+        /* Reduce motion para acessibilidade */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
     </style>
 </head>
 <body>
-    <div id="app"></div>
+    <!-- Preloader -->
+    <div id="preloader" class="preloader">
+        <div class="text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <h2 class="text-white text-xl font-semibold">Carregando Solar Analytics...</h2>
+            <p class="text-gray-400 mt-2">Inicializando dashboard</p>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div id="app" class="app-container"></div>
 
     <!-- Load React components -->
     <script type="text/babel" src="./components/OverviewDashboard.jsx"></script>
@@ -170,15 +330,95 @@
     <script type="text/babel" src="./index.js"></script>
     
     <script>
-        // Global error handler for better debugging
-        window.addEventListener('error', (e) => {
-            console.error('Global error:', e.error);
-        });
-
         // Performance monitoring
         window.addEventListener('load', () => {
             const loadTime = performance.now();
             console.log(`🚀 Solar Analytics Dashboard carregado em ${Math.round(loadTime)}ms`);
+            
+            // Esconder preloader com delay mínimo para UX
+            setTimeout(() => {
+                const preloader = document.getElementById('preloader');
+                if (preloader) {
+                    preloader.classList.add('hidden');
+                    // Remover do DOM após transição
+                    setTimeout(() => {
+                        preloader.remove();
+                    }, 300);
+                }
+            }, 500);
+        });
+
+        // Global error handler otimizado
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e.error);
+            // Opcional: mostrar notificação de erro para o usuário
+        });
+
+        // Handler para Promise rejeitadas
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Promise rejeitada não tratada:', event.reason);
+        });
+
+        // Otimização de scroll passivo
+        document.addEventListener('scroll', function() {
+            // Scroll events são automaticamente passivos no Chrome moderno
+            // mas explicitamente definir para outros browsers
+        }, { passive: true });
+
+        // Intersection Observer para lazy loading
+        if ('IntersectionObserver' in window) {
+            const observerOptions = {
+                root: null,
+                rootMargin: '10px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+
+            // Observar elementos que precisam de fade-in
+            window.observeFadeElements = () => {
+                document.querySelectorAll('.fade-in-element').forEach(el => {
+                    observer.observe(el);
+                });
+            };
+        }
+
+        // Debounced resize handler
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                // Resize logic aqui se necessário
+                console.log('Window resized');
+            }, 150);
+        });
+
+        // Request Animation Frame para smooth updates
+        window.requestAnimationFrame = window.requestAnimationFrame || 
+                                      window.webkitRequestAnimationFrame || 
+                                      window.mozRequestAnimationFrame || 
+                                      window.oRequestAnimationFrame || 
+                                      window.msRequestAnimationFrame || 
+                                      function(callback) {
+                                          window.setTimeout(callback, 1000 / 60);
+                                      };
+
+        // Service Worker para cache (opcional)
+        if ('serviceWorker' in navigator) {
+            // Registrar service worker se disponível
+            // navigator.serviceWorker.register('/sw.js');
+        }
+
+        // Otimização de memória
+        window.addEventListener('beforeunload', () => {
+            // Cleanup se necessário
+            console.log('Cleaning up before unload...');
         });
     </script>
 </body>
